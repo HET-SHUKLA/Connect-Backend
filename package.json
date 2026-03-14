@@ -1,0 +1,24 @@
+{
+  "name": "connect-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HET-SHUKLA/Connect-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/HET-SHUKLA/Connect-Backend/issues"
+  },
+  "homepage": "https://github.com/HET-SHUKLA/Connect-Backend#readme",
+  "dependencies": {
+    "mediasoup": "^3.19.18"
+  }
+}
