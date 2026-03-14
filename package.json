@@ -1,0 +1,20 @@
+{
+  "name": "connect-e2ee-conferencing-app",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/HET-SHUKLA/Connect#readme",
+  "bugs": {
+    "url": "https://github.com/HET-SHUKLA/Connect/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HET-SHUKLA/Connect.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
