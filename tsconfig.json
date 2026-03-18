@@ -10,10 +10,9 @@
     "module": "nodenext",
     "target": "esnext",
     "moduleResolution": "nodenext",
-    "types": [],
+    "types": ["node"],
     // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
+    "lib": ["esnext"],
     // and npm install -D @types/node
 
     // Other Outputs
