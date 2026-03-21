@@ -65,4 +65,17 @@ type ConsumerCreated = {
     rtpParameters: RtpParameters;
 }
 
-export type SignalMessage = JoinRoomMessage | CreateTransportMessage | TransportCreatedMessage | ConnectTransport | Produce | ProduceCreated | NewProducer | Consume | ConsumerCreated;
+// Messages that flow CLIENT → SERVER
+export type ClientMessage = 
+    | JoinRoomMessage
+    | CreateTransportMessage
+    | ConnectTransport
+    | Produce
+    | Consume;
+
+// Messages that flow SERVER → CLIENT  
+export type ServerMessage =
+    | TransportCreatedMessage
+    | ProduceCreated
+    | NewProducer
+    | ConsumerCreated;
