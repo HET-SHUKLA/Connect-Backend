@@ -1,9 +1,10 @@
-import { WebSocketServer, WebSocket } from "ws"
+import { WebSocketServer } from "ws"
 import { createWorkers } from "./mediasoup/worker.js"
-import type { ClientMessage } from "./types.js"
+import type { ClientMessage, PeerSocket } from "./types.js"
 import { WS_PORT } from "./utils/constants.js";
+import { randomUUID } from "node:crypto";
 
-const handleMessage = (ws: WebSocket, message: ClientMessage) => {
+const handleMessage = (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
         case "join-room":
             console.log(`Client joining room ${message.roomId}`);
@@ -32,8 +33,11 @@ async function main() {
     const wss = new WebSocketServer({ port: WS_PORT })
     console.log(`WebSocket server running on port ${WS_PORT}`)
 
-    wss.on("connection", (ws: WebSocket) => {
-        console.log("Client connected")
+    wss.on("connection", (ws: PeerSocket) => {
+        console.log("Client connected");
+
+        ws.peerId = randomUUID();
+        ws.producerIds = [];
 
         ws.on("message", (raw) => {
             // parse message, route to handler

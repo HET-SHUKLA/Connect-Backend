@@ -7,6 +7,8 @@ import type {
     RtpCapabilities,
 } from "mediasoup/types";
 
+import type { WebSocket } from "ws";
+
 type JoinRoomMessage = {
     type: "join-room";
     roomId: string;
@@ -79,3 +81,11 @@ export type ServerMessage =
     | ProduceCreated
     | NewProducer
     | ConsumerCreated;
+
+export interface PeerSocket extends WebSocket {
+    peerId: string;
+    roomId?: string;
+    sendTransportId?: string;
+    recvTransportId?: string;
+    producerIds: string[];
+}
