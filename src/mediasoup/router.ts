@@ -2,7 +2,7 @@ import { getWorker } from "./worker.js";
 import mediasoup from "mediasoup";
 import type { MediaKind } from "mediasoup/types";
 
-const rooms: Map<string, mediasoup.types.Router> = new Map()
+const rooms: Map<string, mediasoup.types.Router> = new Map();
 
 const mediaCodecs = [
     {
