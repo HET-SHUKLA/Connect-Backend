@@ -19,13 +19,13 @@ export type JoinedRoomMessage = {
     peerId: string
 }
 
-type CreateTransportMessage = {
+export type CreateTransportMessage = {
     type: "create-transport";
     roomId: string;
     direction: "send" | "receive";
 }
 
-type TransportCreatedMessage = {
+export type TransportCreatedMessage = {
     type: "transport-created";
     id: string;
     iceParameters: IceParameters;
