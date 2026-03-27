@@ -9,10 +9,15 @@ import type {
 
 import type { WebSocket } from "ws";
 
-type JoinRoomMessage = {
+export type JoinRoomMessage = {
     type: "join-room";
     roomId: string;
 };
+
+export type JoinedRoomMessage = {
+    type: "joined-room"
+    peerId: string
+}
 
 type CreateTransportMessage = {
     type: "create-transport";
@@ -46,7 +51,7 @@ type ProduceCreated = {
     producerId: string;
 }
 
-type NewProducer = {
+export type NewProducer = {
     type: "new-producer";
     producerId: string;
     peerId: string;
@@ -80,7 +85,8 @@ export type ServerMessage =
     | TransportCreatedMessage
     | ProduceCreated
     | NewProducer
-    | ConsumerCreated;
+    | ConsumerCreated
+    | JoinedRoomMessage;
 
 export interface PeerSocket extends WebSocket {
     peerId: string;

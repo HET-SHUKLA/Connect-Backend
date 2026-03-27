@@ -3,11 +3,12 @@ import { createWorkers } from "./mediasoup/worker.js"
 import type { ClientMessage, PeerSocket } from "./types.js"
 import { WS_PORT } from "./utils/constants.js";
 import { randomUUID } from "node:crypto";
+import { handleJoinRoom } from "./handlers/joinRoom.js";
 
-const handleMessage = (ws: PeerSocket, message: ClientMessage) => {
+const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
         case "join-room":
-            console.log(`Client joining room ${message.roomId}`);
+            await handleJoinRoom(ws, message);
             break;
         case "create-transport":
             console.log(`Client creating transport`);
@@ -39,11 +40,11 @@ async function main() {
         ws.peerId = randomUUID();
         ws.producerIds = [];
 
-        ws.on("message", (raw) => {
+        ws.on("message", async (raw) => {
             // parse message, route to handler
             try {
                 const message: ClientMessage = JSON.parse(raw.toString())
-                handleMessage(ws, message)
+                await handleMessage(ws, message)
             } catch (err) {
                 console.error("Invalid message:", err)
             }
