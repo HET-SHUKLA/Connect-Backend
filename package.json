@@ -21,8 +21,10 @@
   },
   "homepage": "https://github.com/HET-SHUKLA/Connect-Backend#readme",
   "dependencies": {
+    "dotenv": "^17.3.1",
     "mediasoup": "^3.19.18",
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
