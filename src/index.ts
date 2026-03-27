@@ -1,9 +1,10 @@
 import { WebSocketServer } from "ws"
 import { createWorkers } from "./mediasoup/worker.js"
 import type { ClientMessage, PeerSocket } from "./types.js"
-import { WS_PORT } from "./utils/constants.js";
 import { randomUUID } from "node:crypto";
 import { handleJoinRoom } from "./handlers/joinRoom.js";
+import { config } from "./config.js";
+import { handleCreateTransport } from "./handlers/createTransport.js";
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -11,7 +12,7 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
             await handleJoinRoom(ws, message);
             break;
         case "create-transport":
-            console.log(`Client creating transport`);
+            await handleCreateTransport(ws, message);
             break;
         case "connect-transport":
             console.log(`Transport connected`);
@@ -31,8 +32,8 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
 async function main() {
     await createWorkers()
 
-    const wss = new WebSocketServer({ port: WS_PORT })
-    console.log(`WebSocket server running on port ${WS_PORT}`)
+    const wss = new WebSocketServer({ port: config.WS_PORT })
+    console.log(`WebSocket server running on port ${config.WS_PORT}`)
 
     wss.on("connection", (ws: PeerSocket) => {
         console.log("Client connected");

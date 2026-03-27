@@ -1,13 +1,14 @@
 import type { TransportListenInfo } from "mediasoup/types";
 import { getOrCreateRouter } from "../mediasoup/router.js";
-import type { CreateTransportMessage, JoinRoomMessage, PeerSocket, TransportCreatedMessage } from "../types.js";
+import type { CreateTransportMessage, PeerSocket, TransportCreatedMessage } from "../types.js";
 import { send } from "../utils/helper.js";
+import { config } from "../config.js";
 
 const listenInfos: TransportListenInfo[] = [
     {
         protocol: "udp",
         ip: "0.0.0.0",
-        announcedAddress: process.env.ANNOUNCED_IP ?? "127.0.0.1",
+        announcedAddress: config.ANNOUNCED_IP,
     }
 ]
 
@@ -31,6 +32,7 @@ export async function handleCreateTransport(
         iceParameters: transport.iceParameters,
         iceCandidates: transport.iceCandidates,
         dtlsParameters: transport.dtlsParameters,
+        direction,
     }
 
     send(ws, newTransportMessage);

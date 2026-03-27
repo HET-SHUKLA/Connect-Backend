@@ -28,6 +28,7 @@ export type CreateTransportMessage = {
 export type TransportCreatedMessage = {
     type: "transport-created";
     id: string;
+    direction: "send" | "receive";
     iceParameters: IceParameters;
     iceCandidates: IceCandidate[];
     dtlsParameters: DtlsParameters;

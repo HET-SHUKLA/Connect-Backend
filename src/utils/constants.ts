@@ -1,4 +1,4 @@
-export const WS_PORT = 8080;
+// export const WS_PORT = 8080;
 
 // Websocket message types
 // export const JOIN_ROOM = "join-room";
