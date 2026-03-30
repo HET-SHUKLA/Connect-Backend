@@ -1,24 +1,43 @@
-const peerProducers: Map<string, Map<string, string[]>> = new Map();
+import type { PeerSocket } from "../types.js";
 
-export const addPeersToRoom = (roomId: string, peerId: string) => {
+const peerProducers: Map<string, Map<string, string[]>> = new Map();
+const roomPeers: Map<string, PeerSocket[]> = new Map()
+
+export const addPeerToRoom = (roomId: string, peer: PeerSocket) => {
     const peerMap = peerProducers.get(roomId);
+    const peers = roomPeers.get(roomId);
+    const peerId = peer.peerId;
+    
     if (!peerMap) {
         const producers = new Map<string, string[]>();
-        producers.set(peerId, []); // PeerId->ProducerIds
+        producers.set(peerId, []);
         peerProducers.set(roomId, producers);
-        return;
+    } else {
+        peerMap.set(peerId, []);
     }
 
-    peerMap.set(peerId, []);
+    if (!peers) {
+        roomPeers.set(roomId, [peer]);
+    } else {
+        peers.push(peer);
+    }
 }
 
-export const removePeerFromRoom = (roomId: string, peerId: string) => {
+export const removePeerFromRoom = (roomId: string, peer: PeerSocket) => {
     const peerMap = peerProducers.get(roomId);
+    const peerId = peer.peerId;
+
     if (peerMap) {
         peerMap.delete(peerId);
         if (peerMap.size === 0) {
             peerProducers.delete(roomId);
         }
+    }
+
+    const peers = roomPeers.get(roomId);
+    if (peers) {
+        const updatedPeers = peers.filter((p) => p.peerId !== peerId);
+        roomPeers.set(roomId, updatedPeers);
     }
 }
 
@@ -34,11 +53,13 @@ export const getProducersInRoom = (roomId: string) => {
     return producers;
 };
 
-export const addProducerToPeer = (roomId: string, peerId: string, producerId: string) => {
+export const addProducerToPeer = (roomId: string, peer: PeerSocket, producerId: string) => {
+    const peerId = peer.peerId;
+
     let peerMap = peerProducers.get(roomId);
     let producerIds = peerMap?.get(peerId);
     if (!peerMap || !producerIds) {
-        addPeersToRoom(roomId, peerId);
+        addPeerToRoom(roomId, peer);
         peerMap = peerProducers.get(roomId);
         producerIds = peerMap?.get(peerId);
     }
@@ -48,4 +69,8 @@ export const addProducerToPeer = (roomId: string, peerId: string, producerId: st
     }
 
     producerIds.push(producerId);
+}
+
+export const getPeerInRoom = (roomId: string) => {
+    return roomPeers.get(roomId) ?? [];
 }
