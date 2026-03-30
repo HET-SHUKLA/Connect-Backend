@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { handleJoinRoom } from "./handlers/joinRoom.js";
 import { config } from "./config.js";
 import { handleCreateTransport } from "./handlers/createTransport.js";
+import { handleConnectTransport } from "./handlers/connectTransport.js";
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -15,7 +16,7 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
             await handleCreateTransport(ws, message);
             break;
         case "connect-transport":
-            console.log(`Transport connected`);
+            await handleConnectTransport(message);
             break;
         case "produce":
             console.log(`Producer created`);
