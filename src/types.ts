@@ -34,7 +34,7 @@ export type TransportCreatedMessage = {
     dtlsParameters: DtlsParameters;
 }
 
-type ConnectTransport = {
+export type ConnectTransport = {
     type: "connect-transport";
     transportId: string;
     dtlsParameters: DtlsParameters;
