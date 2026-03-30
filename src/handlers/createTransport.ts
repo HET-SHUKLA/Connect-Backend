@@ -3,6 +3,7 @@ import { getOrCreateRouter } from "../mediasoup/router.js";
 import type { CreateTransportMessage, PeerSocket, TransportCreatedMessage } from "../types.js";
 import { send } from "../utils/helper.js";
 import { config } from "../config.js";
+import { addTransport } from "../mediasoup/transport.js";
 
 const listenInfos: TransportListenInfo[] = [
     {
@@ -25,6 +26,8 @@ export async function handleCreateTransport(
     } else {
         ws.recvTransportId = transport.id;
     }
+
+    addTransport(transport.id, transport);
 
     const newTransportMessage: TransportCreatedMessage = {
         type: "transport-created",
