@@ -1,7 +1,6 @@
-import mediasoup from "mediasoup"
 import type { WebRtcTransport } from "mediasoup/types";
 
-const transports: Map<string, mediasoup.types.WebRtcTransport> = new Map()
+const transports: Map<string, WebRtcTransport> = new Map()
 
 export function addTransport(transportId: string, transport: WebRtcTransport) {
     transports.set(transportId, transport);
