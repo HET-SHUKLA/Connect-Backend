@@ -1,11 +1,3 @@
-# Welcome Back. Good That You Asked.
-
-Never continue building without knowing exactly where you stand. That's a good habit.
-
-Here's everything we've decided, top to bottom.
-
----
-
 # The App — High Level Design
 
 ## What We're Building
@@ -158,28 +150,3 @@ Server → All:    new-producer { producerId, peerId }
 Client → Server: consume { producerId, roomId }
 Server → Client: consumer params
 ```
-
----
-
-## Where We Stopped
-
-We were building `shared/types.ts` — the TypeScript types for every signaling message.
-
-We had gotten to:
-
-```typescript
-// Done so far
-type JoinRoomMessage = {
-    type: "join-room"
-    roomId: string
-}
-
-type CreateTransportMessage = {
-    type: "create-transport"
-    roomId: string
-}
-```
-
-And I had just asked you — when server creates a transport and responds to the client, what 4 fields does that response contain?
-
-**Go look at mediasoup docs for `router.createWebRtcTransport()` return value. Find those 4 fields. Then we continue.**
