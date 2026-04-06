@@ -40,14 +40,14 @@ export type ConnectTransport = {
     dtlsParameters: DtlsParameters;
 }
 
-type Produce = {
+export type Produce = {
     type: "produce";
     roomId: string;
     kind: MediaKind;
     rtpParameters: RtpParameters;
 }
 
-type ProduceCreated = {
+export type ProduceCreated = {
     type: "produce-created";
     producerId: string;
 }

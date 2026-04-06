@@ -6,6 +6,7 @@ import { handleJoinRoom } from "./handlers/joinRoom.js";
 import { config } from "./config.js";
 import { handleCreateTransport } from "./handlers/createTransport.js";
 import { handleConnectTransport } from "./handlers/connectTransport.js";
+import { handleProduce } from "./handlers/createProducer.js";
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -19,7 +20,7 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
             await handleConnectTransport(message);
             break;
         case "produce":
-            console.log(`Producer created`);
+            await handleProduce(ws, message);
             break;
         case "consume":
             console.log(`Consumer created`);
