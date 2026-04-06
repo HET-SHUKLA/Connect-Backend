@@ -58,14 +58,14 @@ export type NewProducer = {
     peerId: string;
 }
 
-type Consume = {
+export type Consume = {
     type: "consume";
     roomId: string;
     producerId: string;
     rtpCapabilities: RtpCapabilities;
 }
 
-type ConsumerCreated = {
+export type ConsumerCreated = {
     type: "consumer-created";
     consumerId: string;
     producerId: string;

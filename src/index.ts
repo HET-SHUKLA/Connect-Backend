@@ -7,6 +7,7 @@ import { config } from "./config.js";
 import { handleCreateTransport } from "./handlers/createTransport.js";
 import { handleConnectTransport } from "./handlers/connectTransport.js";
 import { handleProduce } from "./handlers/createProducer.js";
+import { handleConsume } from "./handlers/createConsume.js";
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -23,7 +24,7 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
             await handleProduce(ws, message);
             break;
         case "consume":
-            console.log(`Consumer created`);
+            await handleConsume(ws, message);
             break;
         default:
             const _exhaustive: never = message;
