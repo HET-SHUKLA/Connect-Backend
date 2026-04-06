@@ -73,6 +73,11 @@ export type ConsumerCreated = {
     rtpParameters: RtpParameters;
 }
 
+export type PeerLeft = {
+    type: "peer-left"
+    peerId: string
+}
+
 // Messages that flow CLIENT → SERVER
 export type ClientMessage = 
     | JoinRoomMessage
@@ -87,7 +92,8 @@ export type ServerMessage =
     | ProduceCreated
     | NewProducer
     | ConsumerCreated
-    | JoinedRoomMessage;
+    | JoinedRoomMessage
+    | PeerLeft;
 
 export interface PeerSocket extends WebSocket {
     peerId: string;
