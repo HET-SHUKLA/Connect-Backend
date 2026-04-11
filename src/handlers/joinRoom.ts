@@ -1,5 +1,6 @@
 import { addPeerToRoom, getProducersInRoom } from "../mediasoup/room.js";
 import { getOrCreateRouter } from "../mediasoup/router.js";
+import { roomExists } from "../rooms.js";
 import type { JoinedRoomMessage, JoinRoomMessage, NewProducer, PeerSocket, RouterRtpCapabilitiesMessage } from "../types.js";
 import { send } from "../utils/helper.js";
 
@@ -8,6 +9,11 @@ export async function handleJoinRoom(
     message: JoinRoomMessage
 ) {
 
+    if (!roomExists(message.roomId)) {
+        ws.close(4004, "Room not found")
+        return
+    }
+    
     const joinedRoom: JoinedRoomMessage = {
         type: "joined-room",
         peerId: ws.peerId,

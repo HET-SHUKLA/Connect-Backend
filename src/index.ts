@@ -12,6 +12,10 @@ import { getPeerInRoom, removePeerFromRoom } from "./mediasoup/room.js";
 import { getTransport, removeTransport } from "./mediasoup/transport.js";
 import { send } from "./utils/helper.js";
 import { deleteRouter } from "./mediasoup/router.js";
+import { router } from "./api.js";
+import express from "express"
+import { createServer } from "node:http";
+import cors from "cors"
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -30,9 +34,6 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
         case "consume":
             await handleConsume(ws, message);
             break;
-        case "router-rtp-capabilities":
-            // this message type is only sent from server → client, so we can ignore it here
-            break;
         default:
             const _exhaustive: never = message;
             console.warn("Unhandled message type");
@@ -42,8 +43,21 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
 async function main() {
     await createWorkers()
 
-    const wss = new WebSocketServer({ port: config.WS_PORT })
-    console.log(`WebSocket server running on port ${config.WS_PORT}`)
+    const app = express()
+    app.use(cors({ 
+        origin: "*"  // allow all origins for development
+    }))
+    app.use(express.json())
+    app.use("/api", router);
+
+    const httpServer = createServer(app)
+
+    const wss = new WebSocketServer({ server: httpServer })
+    console.log(`WebSocket server running on port ${config.WS_PORT}`);
+
+    httpServer.listen(config.WS_PORT, () => {
+        console.log(`Server running on port ${config.WS_PORT}`)
+    })
 
     wss.on("connection", (ws: PeerSocket) => {
         console.log("Client connected");

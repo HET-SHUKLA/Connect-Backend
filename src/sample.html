@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Connect</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 14px; }
+    input { padding: 10px; font-size: 14px; width: 300px; }
+    #status { margin: 10px 0; color: #555; }
+    #videos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    video { width: 300px; height: 200px; background: #000; border-radius: 8px; }
+    .video-label { font-size: 12px; color: #888; text-align: center; }
+    #log { margin-top: 20px; padding: 10px; background: #f4f4f4; font-family: monospace; font-size: 12px; height: 150px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+  <h2>Connect — Room Test</h2>
+
+  <div>
+    <button id="createBtn">Create Room</button>
+  </div>
+
+  <div style="margin-top: 15px;">
+    <input id="roomInput" type="text" placeholder="Enter Room ID" />
+    <button id="joinBtn">Join Room</button>
+  </div>
+
+  <div id="status">Status: idle</div>
+
+  <div id="videos">
+    <div>
+      <video id="localVideo" autoplay muted playsinline></video>
+      <div class="video-label">You</div>
+    </div>
+  </div>
+
+  <div id="log"></div>
+
+<script src="http://localhost:8080/api/mediasoup-client.js"></script>
+
+  <script>
+    const API = "http://localhost:8080/api"
+    const WS  = "ws://localhost:8080"
+
+    // ─── Logging ────────────────────────────────────────────────────────────
+    function log(msg) {
+      const el = document.getElementById("log")
+      el.innerHTML += `<div>${new Date().toLocaleTimeString()} — ${msg}</div>`
+      el.scrollTop = el.scrollHeight
+      console.log(msg)
+    }
+
+    function setStatus(msg) {
+      document.getElementById("status").textContent = "Status: " + msg
+      log(msg)
+    }
+
+    // ─── WebSocket with waitFor ──────────────────────────────────────────────
+    // Resolvers waiting for a specific message type
+    const resolvers = {}
+
+    let ws = null
+
+    function connectWS() {
+      return new Promise((resolve, reject) => {
+        ws = new WebSocket(WS)
+        ws.onopen = () => resolve()
+        ws.onerror = (e) => reject(e)
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data)
+          log(`← ${msg.type}`)
+
+          // If someone is waiting for this type, resolve them
+          if (resolvers[msg.type]) {
+            const resolve = resolvers[msg.type].shift()
+            if (resolve) resolve(msg)
+            return
+          }
+
+          // Otherwise handle async events
+          handleServerEvent(msg)
+        }
+      })
+    }
+
+    // Wait for a specific message type from server
+    function waitFor(type) {
+      return new Promise((resolve) => {
+        if (!resolvers[type]) resolvers[type] = []
+        resolvers[type].push(resolve)
+      })
+    }
+
+    function sendWS(msg) {
+      log(`→ ${msg.type}`)
+      ws.send(JSON.stringify(msg))
+    }
+
+    // ─── Async event handlers (new-producer, peer-left) ─────────────────────
+    // These can arrive at any time after we're ready
+    let recvTransport = null
+    let device = null
+    let currentRoomId = null
+    const pendingProducers = [] // queue before recvTransport is ready
+    let isReady = false
+
+    async function handleServerEvent(msg) {
+      if (msg.type === "new-producer") {
+        if (!isReady) {
+          pendingProducers.push(msg)
+          log(`Queued producer ${msg.producerId}`)
+          return
+        }
+        await consumeAndDisplay(msg.producerId, msg.peerId)
+      }
+
+      if (msg.type === "peer-left") {
+        const el = document.getElementById("peer-" + msg.peerId)
+        if (el) el.remove()
+        log(`Peer left: ${msg.peerId}`)
+      }
+    }
+
+    // ─── Main join flow ──────────────────────────────────────────────────────
+    async function joinRoom(roomId) {
+      currentRoomId = roomId
+      document.getElementById("roomInput").value = roomId
+
+      setStatus("connecting...")
+      await connectWS()
+
+      // 1. Join room
+      sendWS({ type: "join-room", roomId })
+
+      // 2. Wait for router capabilities
+      setStatus("loading device...")
+      const capMsg = await waitFor("router-rtp-capabilities")
+      device = new mediasoupClient.Device()
+      await device.load({ routerRtpCapabilities: capMsg.rtpCapabilities })
+      log("Device loaded")
+
+      // 3. Create SEND transport
+      sendWS({ type: "create-transport", roomId, direction: "send" })
+      const sendMsg = await waitFor("transport-created")
+      const sendTransport = device.createSendTransport({
+        id: sendMsg.id,
+        iceParameters: sendMsg.iceParameters,
+        iceCandidates: sendMsg.iceCandidates,
+        dtlsParameters: sendMsg.dtlsParameters,
+      })
+
+      sendTransport.on("connect", ({ dtlsParameters }, cb, eb) => {
+        sendWS({ type: "connect-transport", transportId: sendTransport.id, dtlsParameters })
+        cb()
+      })
+
+      sendTransport.on("produce", ({ kind, rtpParameters }, cb, eb) => {
+        sendWS({ type: "produce", roomId, kind, rtpParameters })
+        waitFor("produce-created").then(msg => cb({ id: msg.producerId }))
+      })
+
+      log("Send transport ready")
+
+      // 4. Create RECV transport
+      sendWS({ type: "create-transport", roomId, direction: "receive" })
+      const recvMsg = await waitFor("transport-created")
+      recvTransport = device.createRecvTransport({
+        id: recvMsg.id,
+        iceParameters: recvMsg.iceParameters,
+        iceCandidates: recvMsg.iceCandidates,
+        dtlsParameters: recvMsg.dtlsParameters,
+      })
+
+      recvTransport.on("connect", ({ dtlsParameters }, cb, eb) => {
+        sendWS({ type: "connect-transport", transportId: recvTransport.id, dtlsParameters })
+        cb()
+      })
+
+      log("Recv transport ready")
+
+      // 5. Get local media and produce
+      setStatus("getting camera...")
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      document.getElementById("localVideo").srcObject = stream
+
+      await sendTransport.produce({ track: stream.getVideoTracks()[0] })
+      await sendTransport.produce({ track: stream.getAudioTracks()[0] })
+      log("Producing audio + video")
+
+      // 6. Flush any producers that arrived before we were ready
+      isReady = true
+      for (const msg of pendingProducers) {
+        await consumeAndDisplay(msg.producerId, msg.peerId)
+      }
+      pendingProducers.length = 0
+
+      setStatus("connected — room: " + roomId)
+    }
+
+    async function consumeAndDisplay(producerId, peerId) {
+      sendWS({
+        type: "consume",
+        roomId: currentRoomId,
+        producerId,
+        rtpCapabilities: device.rtpCapabilities,
+      })
+
+      const msg = await waitFor("consumer-created")
+
+      const consumer = await recvTransport.consume({
+        id: msg.consumerId,
+        producerId: msg.producerId,
+        kind: msg.kind,
+        rtpParameters: msg.rtpParameters,
+      })
+
+      const stream = new MediaStream([consumer.track])
+
+      const wrapper = document.createElement("div")
+      wrapper.id = "peer-" + peerId
+
+      const video = document.createElement("video")
+      video.autoplay = true
+      video.playsInline = true
+      video.srcObject = stream
+
+      const label = document.createElement("div")
+      label.className = "video-label"
+      label.textContent = "Peer: " + peerId.slice(0, 8)
+
+      wrapper.appendChild(video)
+      wrapper.appendChild(label)
+      document.getElementById("videos").appendChild(wrapper)
+
+      log(`Consuming peer ${peerId.slice(0, 8)}`)
+    }
+
+    // ─── Buttons ─────────────────────────────────────────────────────────────
+    document.getElementById("createBtn").onclick = async () => {
+      try {
+        const res = await fetch(`${API}/rooms`, { method: "POST" })
+        const data = await res.json()
+        log("Room created: " + data.roomId)
+        await joinRoom(data.roomId)
+      } catch (err) {
+        setStatus("Error: " + err.message)
+        console.error(err)
+      }
+    }
+
+    document.getElementById("joinBtn").onclick = async () => {
+      const roomId = document.getElementById("roomInput").value.trim()
+      if (!roomId) { alert("Enter a room ID"); return }
+      try {
+        const res = await fetch(`${API}/rooms/${roomId}`)
+        if (!res.ok) { alert("Room not found"); return }
+        await joinRoom(roomId)
+      } catch (err) {
+        setStatus("Error: " + err.message)
+        console.error(err)
+      }
+    }
+  </script>
+</body>
+</html>

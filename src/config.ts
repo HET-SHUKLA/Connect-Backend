@@ -13,6 +13,7 @@ const schema = z.object({
     TURN_SERVER_URL: z.string().optional(),
     TURN_USERNAME: z.string().optional(),
     TURN_PASSWORD: z.string().optional(),
+    CORS_ORIGIN: z.string().optional(),
 })
 
 const parsed = schema.safeParse(process.env)
