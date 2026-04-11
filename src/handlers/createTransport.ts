@@ -18,7 +18,12 @@ export async function handleCreateTransport(
     message: CreateTransportMessage
 ) {
     const router = await getOrCreateRouter(message.roomId);
-    const transport = await router.createWebRtcTransport({ listenInfos });
+    const transport = await router.createWebRtcTransport({
+        listenInfos,
+        enableUdp: true,
+        enableTcp: true,
+        preferUdp: true,
+    });
     const direction = message.direction;
 
     if (direction === "send") {

@@ -11,6 +11,7 @@ import { handleConsume } from "./handlers/createConsume.js";
 import { getPeerInRoom, removePeerFromRoom } from "./mediasoup/room.js";
 import { getTransport, removeTransport } from "./mediasoup/transport.js";
 import { send } from "./utils/helper.js";
+import { deleteRouter } from "./mediasoup/router.js";
 
 const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
     switch (message.type) {
@@ -28,6 +29,9 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
             break;
         case "consume":
             await handleConsume(ws, message);
+            break;
+        case "router-rtp-capabilities":
+            // this message type is only sent from server → client, so we can ignore it here
             break;
         default:
             const _exhaustive: never = message;
@@ -81,6 +85,11 @@ async function main() {
                 }
                 send(peer, peerLeftMessage);
             });
+
+            const remainingPeers = getPeerInRoom(ws.roomId)
+            if (remainingPeers.length === 0) {
+                deleteRouter(ws.roomId)
+            }
         })
     })
 }

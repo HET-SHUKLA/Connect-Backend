@@ -78,6 +78,11 @@ export type PeerLeft = {
     peerId: string
 }
 
+export type RouterRtpCapabilitiesMessage = {
+    type: "router-rtp-capabilities";
+    rtpCapabilities: RtpCapabilities;
+}
+
 // Messages that flow CLIENT → SERVER
 export type ClientMessage = 
     | JoinRoomMessage
@@ -85,7 +90,7 @@ export type ClientMessage =
     | ConnectTransport
     | Produce
     | Consume;
-
+    
 // Messages that flow SERVER → CLIENT  
 export type ServerMessage =
     | TransportCreatedMessage
@@ -93,7 +98,8 @@ export type ServerMessage =
     | NewProducer
     | ConsumerCreated
     | JoinedRoomMessage
-    | PeerLeft;
+    | PeerLeft
+    | RouterRtpCapabilitiesMessage;
 
 export interface PeerSocket extends WebSocket {
     peerId: string;

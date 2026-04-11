@@ -9,7 +9,10 @@ const schema = z.object({
     }),
     WS_PORT: z.coerce.number({
         error: "WS_PORT is required and must be a number",
-    })
+    }),
+    TURN_SERVER_URL: z.string().optional(),
+    TURN_USERNAME: z.string().optional(),
+    TURN_PASSWORD: z.string().optional(),
 })
 
 const parsed = schema.safeParse(process.env)

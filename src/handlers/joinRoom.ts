@@ -1,6 +1,6 @@
 import { addPeerToRoom, getProducersInRoom } from "../mediasoup/room.js";
 import { getOrCreateRouter } from "../mediasoup/router.js";
-import type { JoinedRoomMessage, JoinRoomMessage, NewProducer, PeerSocket } from "../types.js";
+import type { JoinedRoomMessage, JoinRoomMessage, NewProducer, PeerSocket, RouterRtpCapabilitiesMessage } from "../types.js";
 import { send } from "../utils/helper.js";
 
 export async function handleJoinRoom(
@@ -18,7 +18,7 @@ export async function handleJoinRoom(
     const roomId = message.roomId;
     ws.roomId = roomId;
     
-    await getOrCreateRouter(roomId);
+    const router = await getOrCreateRouter(roomId);
     
     const producers = getProducersInRoom(roomId);
     
@@ -34,4 +34,11 @@ export async function handleJoinRoom(
             send(ws, newProducerMessage);
         });
     });
+
+    // send capabilities to client
+    const routerRtpCapabilities: RouterRtpCapabilitiesMessage = {
+        type: "router-rtp-capabilities",
+        rtpCapabilities: router.rtpCapabilities
+    }
+    send(ws, routerRtpCapabilities)
 }
