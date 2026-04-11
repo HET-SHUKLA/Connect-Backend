@@ -27,7 +27,7 @@ export const handleConsume = async (
 
     const consumer = await recvTransport.consume({
         ...consumerOptions,
-        paused: true,
+        paused: false,
     });
 
     const consumerCreatedMessage: ConsumerCreated = {
