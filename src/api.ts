@@ -5,6 +5,7 @@ import { join } from "node:path"
 
 
 export const router = express.Router()
+const publicKeys = new Map<string, string>()
 
 // POST /api/rooms — create a new room
 router.post("/rooms", (req, res) => {
@@ -29,4 +30,15 @@ router.get("/mediasoup-client.js", (req, res) => {
     )
     res.setHeader("Content-Type", "application/javascript")
     res.send(readFileSync(filePath))
+});
+
+router.post("/keys/:peerId", (req, res) => {
+    publicKeys.set(req.params.peerId, req.body.publicKey)
+    res.json({ ok: true })
+})
+
+router.get("/keys/:peerId", (req, res) => {
+    const key = publicKeys.get(req.params.peerId)
+    if (!key) { res.status(404).json({ error: "Not found" }); return }
+    res.json({ publicKey: key })
 })

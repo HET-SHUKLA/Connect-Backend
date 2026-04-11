@@ -34,6 +34,27 @@ const handleMessage = async (ws: PeerSocket, message: ClientMessage) => {
         case "consume":
             await handleConsume(ws, message);
             break;
+        case "request-key":
+            if (!ws.roomId) break
+            getPeerInRoom(ws.roomId).forEach(peer => {
+                if (peer.peerId !== ws.peerId) {
+                    send(peer, { type: "key-requested", peerId: ws.peerId })
+                }
+            });
+        break
+
+        case "key-exchange":
+            if (!ws.roomId) break
+            const target = getPeerInRoom(ws.roomId)
+                .find(p => p.peerId === message.targetPeerId)
+            if (target) {
+                send(target, {
+                    type: "key-exchange-received",
+                    fromPeerId: ws.peerId,
+                    encryptedRoomKey: message.encryptedRoomKey
+                })
+            }
+            break;
         default:
             const _exhaustive: never = message;
             console.warn("Unhandled message type");

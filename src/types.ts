@@ -83,14 +83,37 @@ export type RouterRtpCapabilitiesMessage = {
     rtpCapabilities: RtpCapabilities;
 }
 
+export type RequestKeyMessage = {
+    type: "request-key"
+}
+
+export type KeyExchangeMessage = {
+    type: "key-exchange";
+    targetPeerId: string;
+    encryptedRoomKey: string
+}
+
+export type KeyRequestedMessage = {
+    type: "key-requested";
+    peerId: string
+}
+
+export type KeyExchangeReceived = {
+    type: "key-exchange-received";
+    fromPeerId: string;
+    encryptedRoomKey: string
+}
+
 // Messages that flow CLIENT → SERVER
 export type ClientMessage = 
     | JoinRoomMessage
     | CreateTransportMessage
     | ConnectTransport
     | Produce
-    | Consume;
-    
+    | Consume
+    | KeyExchangeMessage
+    | RequestKeyMessage;
+
 // Messages that flow SERVER → CLIENT  
 export type ServerMessage =
     | TransportCreatedMessage
@@ -99,7 +122,9 @@ export type ServerMessage =
     | ConsumerCreated
     | JoinedRoomMessage
     | PeerLeft
-    | RouterRtpCapabilitiesMessage;
+    | RouterRtpCapabilitiesMessage
+    | KeyExchangeReceived
+    | KeyRequestedMessage;
 
 export interface PeerSocket extends WebSocket {
     peerId: string;
