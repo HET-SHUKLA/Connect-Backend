@@ -41,6 +41,7 @@ export async function handleCreateTransport(
         iceCandidates: transport.iceCandidates,
         dtlsParameters: transport.dtlsParameters,
         direction,
+        iceServers: config.TURN_SERVERS || [],
     }
 
     send(ws, newTransportMessage);

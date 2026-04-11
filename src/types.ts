@@ -32,6 +32,7 @@ export type TransportCreatedMessage = {
     iceParameters: IceParameters;
     iceCandidates: IceCandidate[];
     dtlsParameters: DtlsParameters;
+    iceServers: any[];
 }
 
 export type ConnectTransport = {
