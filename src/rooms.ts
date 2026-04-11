@@ -8,7 +8,7 @@ interface Room {
 const rooms = new Map<string, Room>()
 
 export function createRoom(): Room {
-    const roomId = randomUUID()
+    const roomId = Math.floor(Math.random() * 1000).toString()
     const room: Room = { roomId, createdAt: new Date() }
     rooms.set(roomId, room)
     return room
