@@ -4,6 +4,9 @@ import type { CreateTransportMessage, PeerSocket, TransportCreatedMessage } from
 import { send } from "../utils/helper.js";
 import { config } from "../config.js";
 import { addTransport } from "../mediasoup/transport.js";
+import { generateTurnCredentials } from "../utils/turn.js"
+
+const turnCreds = generateTurnCredentials()
 
 const listenInfos: TransportListenInfo[] = [
     {
@@ -41,7 +44,17 @@ export async function handleCreateTransport(
         iceCandidates: transport.iceCandidates,
         dtlsParameters: transport.dtlsParameters,
         direction,
-        iceServers: config.TURN_SERVERS || [],
+        iceServers: [{
+                urls: "stun:stun.l.google.com:19302",
+            },
+            {
+                urls: [
+                    `turn:${config.TURN_HOST}:3478?transport=udp`,
+                    `turns:${config.TURN_HOST}:5349?transport=tcp`,
+                ],
+                username: turnCreds.username,
+                credential: turnCreds.credential,
+            }]
     }
 
     send(ws, newTransportMessage);

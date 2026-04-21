@@ -13,6 +13,12 @@ const schema = z.object({
     TURN_SERVERS: z.string().transform(val => JSON.parse(val)).optional(),
     TURN_USERNAME: z.string().optional(),
     TURN_PASSWORD: z.string().optional(),
+    TURN_SECRET: z.string({
+        error: "TURN_SECRET is required and must be a string",
+    }),
+    TURN_HOST: z.string({
+        error: "TURN_HOST is required and must be a string",
+    }),
     CORS_ORIGIN: z.string().optional(),
 })
 

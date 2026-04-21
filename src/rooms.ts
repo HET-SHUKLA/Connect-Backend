@@ -6,9 +6,19 @@ interface Room {
 }
 
 const rooms = new Map<string, Room>()
+const codeIndex = new Map<string, string>()  
+
+function generateShortCode(): string {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    let code = ""
+    for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)]
+    }
+    return codeIndex.has(code) ? generateShortCode() : code
+}
 
 export function createRoom(): Room {
-    const roomId = Math.floor(Math.random() * 1000).toString()
+    const roomId = generateShortCode();
     const room: Room = { roomId, createdAt: new Date() }
     rooms.set(roomId, room)
     return room

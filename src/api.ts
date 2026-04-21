@@ -2,7 +2,8 @@ import express from "express"
 import { createRoom, roomExists } from "./rooms.js"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-
+import { generateTurnCredentials } from "./utils/turn.js"
+import { config } from "./config.js"
 
 export const router = express.Router()
 const publicKeys = new Map<string, string>()
@@ -41,4 +42,24 @@ router.get("/keys/:peerId", (req, res) => {
     const key = publicKeys.get(req.params.peerId)
     if (!key) { res.status(404).json({ error: "Not found" }); return }
     res.json({ publicKey: key })
+})
+
+router.get("/turn-credentials", (req, res) => {
+    const creds = generateTurnCredentials()
+
+    res.json({
+        iceServers: [
+            {
+                urls: "stun:stun.l.google.com:19302",
+            },
+            {
+                urls: [
+                    `turn:${config.TURN_HOST}:3478?transport=udp`,
+                    `turns:${config.TURN_HOST}:5349?transport=tcp`,
+                ],
+                username: creds.username,
+                credential: creds.credential,
+            },
+        ],
+    })
 })
