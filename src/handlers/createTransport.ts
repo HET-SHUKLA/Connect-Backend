@@ -13,6 +13,7 @@ const listenInfos: TransportListenInfo[] = [
         protocol: "udp",
         ip: "0.0.0.0",
         announcedAddress: config.ANNOUNCED_IP,
+        portRange: { min: 40000, max: 49151 },
     }
 ]
 
