@@ -89,6 +89,16 @@ async function main() {
         ws.peerId = randomUUID();
         ws.producerIds = [];
 
+        const heartbeat = setInterval(() => {
+            if (ws.readyState === ws.OPEN) {
+                ws.ping()
+            }
+        }, 30000)
+
+        ws.on("pong", () => {
+            // Connection is alive
+        })
+
         ws.on("message", async (raw) => {
             // parse message, route to handler
             try {
@@ -101,6 +111,7 @@ async function main() {
 
         ws.on("close", () => {
             // handle disconnect
+            clearInterval(heartbeat);
             if (!ws.roomId) {
                 return;
             }
