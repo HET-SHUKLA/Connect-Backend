@@ -73,7 +73,10 @@ async function main() {
 
     const httpServer = createServer(app)
 
-    const wss = new WebSocketServer({ server: httpServer })
+    const wss = new WebSocketServer({
+        server: httpServer,
+        path: "/ws",
+    })
     console.log(`WebSocket server running on port ${config.WS_PORT}`);
 
     httpServer.listen(config.WS_PORT, () => {
