@@ -77,10 +77,10 @@ async function main() {
         server: httpServer,
         path: "/ws",
     })
-    console.log(`WebSocket server running on port ${config.WS_PORT}`);
+    console.log(`WebSocket server running on ws://0.0.0.0:${config.WS_PORT}/ws`);
 
-    httpServer.listen(config.WS_PORT, () => {
-        console.log(`Server running on port ${config.WS_PORT}`)
+    httpServer.listen(config.WS_PORT, "0.0.0.0", () => {
+        console.log(`Server running on http://0.0.0.0:${config.WS_PORT}`)
     })
 
     wss.on("connection", (ws: PeerSocket) => {

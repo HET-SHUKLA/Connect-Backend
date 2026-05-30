@@ -47,19 +47,24 @@ router.get("/keys/:peerId", (req, res) => {
 router.get("/turn-credentials", (req, res) => {
     const creds = generateTurnCredentials()
 
+    // For hosting
+    // res.json({
+    //     iceServers: [
+    //         {
+    //             urls: "stun:stun.l.google.com:19302",
+    //         },
+    //         {
+    //             urls: [
+    //                 `turn:${config.TURN_HOST}:3478?transport=udp`,
+    //                 `turns:${config.TURN_HOST}:5349?transport=tcp`,
+    //             ],
+    //             username: creds.username,
+    //             credential: creds.credential,
+    //         },
+    //     ],
+    // })
+
     res.json({
-        iceServers: [
-            {
-                urls: "stun:stun.l.google.com:19302",
-            },
-            {
-                urls: [
-                    `turn:${config.TURN_HOST}:3478?transport=udp`,
-                    `turns:${config.TURN_HOST}:5349?transport=tcp`,
-                ],
-                username: creds.username,
-                credential: creds.credential,
-            },
-        ],
+        iceServers: config.TURN_SERVERS
     })
 })
