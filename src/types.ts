@@ -7,7 +7,7 @@ import type {
     RtpCapabilities,
 } from "mediasoup/types";
 
-import type { WebSocket } from "ws";
+import type { Socket } from "socket.io";
 
 export type JoinRoomMessage = {
     type: "join-room";
@@ -94,6 +94,11 @@ export type KeyExchangeMessage = {
     encryptedRoomKey: string
 }
 
+export type JoinErrorMessage = {
+    type: "join-error";
+    reason: string
+}
+
 export type KeyRequestedMessage = {
     type: "key-requested";
     peerId: string
@@ -125,9 +130,11 @@ export type ServerMessage =
     | PeerLeft
     | RouterRtpCapabilitiesMessage
     | KeyExchangeReceived
-    | KeyRequestedMessage;
+    | KeyRequestedMessage
+    | JoinErrorMessage;
 
-export interface PeerSocket extends WebSocket {
+// Every message is emitted as a Socket.IO event whose name is `message.type`
+export interface PeerSocket extends Socket {
     peerId: string;
     roomId?: string;
     sendTransportId?: string;

@@ -9,26 +9,27 @@ export async function handleJoinRoom(
     message: JoinRoomMessage
 ) {
 
+    if (ws.roomId) return
+
     if (!roomExists(message.roomId)) {
-        ws.close(4004, "Room not found")
+        send(ws, { type: "join-error", reason: "Room not found" })
+        ws.disconnect(true)
         return
     }
-    
+
+    const roomId = message.roomId;
+    const router = await getOrCreateRouter(roomId);
+    const producers = getProducersInRoom(roomId);
+
+    // Register membership before replying so later requests pass the room check
+    ws.roomId = roomId;
+    addPeerToRoom(roomId, ws);
+
     const joinedRoom: JoinedRoomMessage = {
         type: "joined-room",
         peerId: ws.peerId,
     };
-
     send(ws, joinedRoom);
-    
-    const roomId = message.roomId;
-    ws.roomId = roomId;
-    
-    const router = await getOrCreateRouter(roomId);
-    
-    const producers = getProducersInRoom(roomId);
-    
-    addPeerToRoom(roomId, ws);
 
     producers.forEach(({ peerId, producerIds }) => {
         producerIds.forEach((producerId) => {

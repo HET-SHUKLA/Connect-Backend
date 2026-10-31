@@ -1,21 +1,21 @@
-# ADR-0003 — Raw `ws` vs Socket.IO for signaling
+# ADR-0003 — Socket.IO vs raw `ws` for signaling
 
-- **Status:** Proposed — **decision needed from the project owner**
+- **Status:** Accepted
 - **Date:** 2026-11-01
 
 ## Context
 
-The report specifies Express + Socket.IO with colon-style events (`room:join`, `transport:create`, …). The implementation uses raw `ws` with a fully typed discriminated union (`join-room`, …) and an exhaustive router. Connect-Frontend mirrors the current types and uses a raw `WebSocket` client. Switching changes the wire protocol for both repos.
+The report specifies Express + Socket.IO with colon-style events (`room:join`, `transport:create`, …). The implementation used raw `ws` with a typed discriminated union (`join-room`, …). The project owner decided to follow the report.
 
 ## Options considered
 
-1. **Keep `ws`**, extend the vocabulary (add `room:end`-style messages in the existing kebab-case style, add heartbeat/reconnect logic in the client). Pros: no breaking change, minimal deps, strong typing already in place. Cons: reconnection, rooms/broadcast helpers, and fallback transports must be built; deviates from the report text (update the report instead).
-2. **Migrate to Socket.IO.** Pros: auto-reconnect, rooms, acks, matches the report. Cons: breaking change in backend and frontend, heavier client, must re-establish the typed contract (Socket.IO has typed events, but the exhaustive-switch pattern changes).
+1. **Keep `ws`** and update the report. No breaking change, but reconnection, rooms and fallback transports must be built by hand.
+2. **Migrate to Socket.IO** (chosen). Matches the report; adds acks, rooms and reconnection primitives.
 
 ## Decision
 
-_Pending._ Recommendation: option 1, because NFR-REL-01 (reconnect) can be met with a small client reconnect layer and it avoids a cross-repo rewrite.
+Migrate to Socket.IO 4 on the existing HTTP server (default path `/socket.io`). Step 1 (done) changes only the **transport**: every message keeps its typed shape and is emitted as a Socket.IO event named after its `type` (`join-room`, `create-transport`, …), so handlers and `types.ts` are unchanged. Auto-reconnect is disabled in the client for now because a reconnect creates a new peer with no room state. Step 2 (planned): rename events to the report's colon style (`room:join`, `room:joined`, `transport:create`, …) and add `room:leave`, `room:end`, chat — one feature spec per group.
 
 ## Consequences
 
-Whichever is chosen: update `02-signaling-sfu.md`, `gap-analysis.md` G1, the `types.ts` mirror in Connect-Frontend, and the report's wording if option 1.
+Breaking wire change for Connect-Frontend (done together). `ws` is no longer a direct dependency. Behind Nginx, WebSocket upgrade must be allowed for `/socket.io/`. Run `npm install` in both repos to refresh lockfiles.

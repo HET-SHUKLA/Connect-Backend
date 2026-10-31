@@ -6,7 +6,7 @@ Differences between the project report (target) and this repo's code, plus known
 
 | # | Area | Report says | Code today | Action |
 |---|---|---|---|---|
-| G1 | Signaling transport | Express + Socket.IO, events like `room:join` | Express + raw `ws`, kebab-case messages (`join-room`) | **Decision needed** → ADR-0003 (Proposed) |
+| G1 | Signaling transport | Express + Socket.IO, events like `room:join` | Socket.IO (done); events still kebab-case (`join-room`) | Transport done (ADR-0003 Accepted); rename to colon style + add `room:leave`/`room:end`/chat as feature specs |
 | G2 | Room persistence | PostgreSQL rooms/participants, lifecycle states | In-memory maps | FR-ROOM-06/07 |
 | G3 | Room auth | JWT on create/join, host role, password, host controls, `room:end` | None | FR-AUTH-03, FR-ROOM-01..05; see `04-auth-integration.md` |
 | G4 | Chat | Real-time chat relay | Not present | FR-CHAT-01 |
@@ -24,11 +24,11 @@ Differences between the project report (target) and this repo's code, plus known
 
 | # | Where | Defect |
 |---|---|---|
-| D1 | `src/index.ts` | CORS `origin: "*"`; `CORS_ORIGIN` env validated but ignored |
+| D1 | `src/index.ts` | **Fixed**: `CORS_ORIGIN` is now applied to REST and Socket.IO, but still defaults to `*` when unset |
 | D2 | `src/index.ts` | Invalid JSON/handler errors are only `console.error`'d; client gets no error message |
 | D3 | `src/api.ts` | `/keys/:peerId` unauthenticated, unbounded in-memory map, entries never deleted |
 | D4 | `src/handlers/createTransport.ts` | Port range hard-coded 40000–49151 (report default 40000–49999); `generateTurnCredentials()` evaluated once at module load (would expire) |
-| D5 | `src/handlers/joinRoom.ts` | `joined-room` is sent **before** `ws.roomId` is set and the peer is added; a peer may join twice; no membership checks on `create-transport`/`produce`/`consume` (they trust client `roomId`) |
+| D5 | `src/handlers/joinRoom.ts` | **Fixed** (membership set before `joined-room`, double join ignored, other messages require the joined `roomId`); was: `joined-room` sent **before** `ws.roomId` is set and the peer is added; a peer may join twice; no membership checks on `create-transport`/`produce`/`consume` (they trust client `roomId`) |
 | D6 | `src/index.ts` | `JSON.parse` failures and unknown types are swallowed; no message size/rate limits |
 | D7 | `src/rooms.ts` | Rooms are never removed (only routers are); `Math.random` used for codes; collision check uses wrong index (`codeIndex`, never populated) |
 | D8 | `src/lib/*.ts` | Unused client-style crypto helpers (dead code) |

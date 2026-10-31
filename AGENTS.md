@@ -1,6 +1,6 @@
 # Connect-Backend — Agent Guide
 
-Signaling + SFU for **Connect**, an end-to-end encrypted (E2EE) video conferencing app. One Node.js process: Express REST (`/api`), `ws` WebSocket (`/ws`), mediasoup workers (one per CPU core). This repo is **self-contained**: everything an agent needs is here, including the specs. It is one of three sibling repos (`Connect-Frontend`, `Authentication-Service`) that you do **not** need cloned; their relevant contracts are documented in [specs/](./specs/README.md).
+Signaling + SFU for **Connect**, an end-to-end encrypted (E2EE) video conferencing app. One Node.js process: Express REST (`/api`), Socket.IO signaling (`/socket.io`), mediasoup workers (one per CPU core). This repo is **self-contained**: everything an agent needs is here, including the specs. It is one of three sibling repos (`Connect-Frontend`, `Authentication-Service`) that you do **not** need cloned; their relevant contracts are documented in [specs/](./specs/README.md).
 
 ## Spec-driven workflow
 
@@ -21,7 +21,7 @@ Source priority when sources disagree: user instruction > `specs/` > README/AGEN
 |---|---|
 | [00-system-context.md](./specs/00-system-context.md) | Vision, actors, whole-system architecture, sibling repos and contract ownership |
 | [01-requirements.md](./specs/01-requirements.md) | Requirements relevant to this repo, with status |
-| [02-signaling-sfu.md](./specs/02-signaling-sfu.md) | Room lifecycle, REST + WebSocket contract (**owned by this repo**), mediasoup design, config |
+| [02-signaling-sfu.md](./specs/02-signaling-sfu.md) | Room lifecycle, REST + Socket.IO contract (**owned by this repo**), mediasoup design, config |
 | [03-e2ee.md](./specs/03-e2ee.md) | Encryption design, threat model, weaknesses, rules |
 | [04-auth-integration.md](./specs/04-auth-integration.md) | What this repo needs from Authentication-Service (JWT validation) |
 | [gap-analysis.md](./specs/gap-analysis.md) | Report-vs-code gaps, known defects, roadmap |
@@ -58,13 +58,13 @@ Environment (`.env`, gitignored): `WS_PORT`, `ANNOUNCED_IP`, `TURN_SECRET`, `TUR
 
 ## Contract ownership (this repo is the source of truth for)
 
-- REST under `/api` and the WebSocket vocabulary in `src/types.ts` (documented in [02-signaling-sfu.md](./specs/02-signaling-sfu.md)). Connect-Frontend keeps a manual mirror. **Any change to a message or REST shape is a breaking change for the frontend**: update `types.ts`, the spec table, and call it out in the commit/PR so the frontend repo can follow.
+- REST under `/api` and the Socket.IO message vocabulary in `src/types.ts` (documented in [02-signaling-sfu.md](./specs/02-signaling-sfu.md)). Connect-Frontend keeps a manual mirror. **Any change to a message or REST shape is a breaking change for the frontend**: update `types.ts`, the spec table, and call it out in the commit/PR so the frontend repo can follow.
 - It *consumes* the JWT issued by Authentication-Service (see [04-auth-integration.md](./specs/04-auth-integration.md)).
 
 ## Rules for every change
 
 - Strict TypeScript, ESM: relative imports end in `.js`. No new `any`.
-- Adding a signaling message: type → add to `ClientMessage`/`ServerMessage` → `case` in `handleMessage` (keep the `never` guard) → handler in `handlers/` → spec table → note for frontend.
+- Adding a signaling message: type → add to `ClientMessage`/`ServerMessage` (and `clientEvents` in `index.ts`) → `case` in `handleMessage` (keep the `never` guard) → handler in `handlers/` → spec table → note for frontend.
 - Validate all external input; never trust client-provided `roomId`/`peerId` without membership checks.
 - Close every mediasoup object you create (transports, producers, consumers, routers) on leave/empty room.
 - Never log, store or inspect room keys or media; key-exchange payloads are relayed opaquely. Changes near key exchange need a security note in [03-e2ee.md](./specs/03-e2ee.md).

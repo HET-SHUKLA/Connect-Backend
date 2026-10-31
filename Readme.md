@@ -25,11 +25,11 @@ A peer-to-peer mesh collapses past two participants - every new peer multiplies 
 
 - **HMAC-SHA1 TURN credentials (helper ready, not yet wired)** - `utils/turn.ts` generates 1-hour credentials signed with the shared `TURN_SECRET` (coturn `use-auth-secret` style). Today `/api/turn-credentials` and transport creation return the static `TURN_SERVERS` list from the environment; switching them to the HMAC credentials is on the roadmap.
 
-- **Fully typed WebSocket message bus** - every client→server and server→client message shape is declared as a discriminated union in `types.ts`. The message router in `index.ts` uses an exhaustive `switch` with a `never` guard, so TypeScript will catch an unhandled message type at compile time rather than silently dropping it at runtime.
+- **Fully typed Socket.IO message bus** - every client→server and server→client message shape is declared as a discriminated union in `types.ts`, and each message is emitted as an event named after its `type`. The message router in `index.ts` uses an exhaustive `switch` with a `never` guard, so TypeScript will catch an unhandled message type at compile time rather than silently dropping it at runtime.
 
 ## Architecture
 
-The signaling server and SFU are colocated in a single Node.js process. The WebSocket server handles all signaling (join, transport negotiation, key exchange), Express handles REST (room creation, public key registry, ICE server endpoint). mediasoup workers run as separate C++ child processes managed by the Node.js parent - media never passes through the JS event loop.
+The signaling server and SFU are colocated in a single Node.js process. The Socket.IO server handles all signaling (join, transport negotiation, key exchange), Express handles REST (room creation, public key registry, ICE server endpoint). mediasoup workers run as separate C++ child processes managed by the Node.js parent - media never passes through the JS event loop.
 
 ```
 Client A                        Server                        Client B
@@ -66,7 +66,7 @@ mediasoup Worker Pool
 | Runtime | Node.js (ESM) |
 | Language | TypeScript 5 |
 | SFU | mediasoup 3 |
-| Signaling | `ws` (raw WebSocket) |
+| Signaling | Socket.IO 4 |
 | HTTP API | Express 5 |
 | Validation | Zod 4 |
 | NAT Traversal | TURN (HMAC-SHA1 short-lived credentials) |
@@ -124,7 +124,7 @@ CORS_ORIGIN=http://localhost:3000
 | `TURN_HOST` | Hostname of your TURN server (e.g. `turn.yourdomain.com`) |
 | `TURN_SERVERS` | Optional. JSON array of ICE server configs passed to clients. Use `[]` locally |
 | `TURN_USERNAME` / `TURN_PASSWORD` | Optional static TURN credentials |
-| `CORS_ORIGIN` | Optional. Validated but **not applied yet** - the API currently allows all origins |
+| `CORS_ORIGIN` | Optional. Applied to both REST and Socket.IO; defaults to `*` when unset. Set it to the frontend origin outside local development |
 
 `WS_PORT`, `ANNOUNCED_IP`, `TURN_SECRET` and `TURN_HOST` are required; the server exits on startup if they are missing or invalid.
 
@@ -163,11 +163,11 @@ curl http://localhost:8080/api/turn-credentials
 | `POST` / `GET` | `/api/keys/:peerId` | Register / fetch a peer's ECDH public key (in memory) |
 | `GET` | `/api/mediasoup-client.js` | Serves the mediasoup-client bundle (used by `src/sample.html`) |
 
-Then connect to `ws://localhost:8080/ws` and send `{ "type": "join-room", "roomId": "AB3K7X" }`.
+Then connect a Socket.IO client to `http://localhost:8080` and emit `join-room` with `{ "type": "join-room", "roomId": "AB3K7X" }`. Event name = message `type`. An unknown room yields a `join-error` event and a disconnect.
 
-## WebSocket Message Reference
+## Signaling Message Reference
 
-All messages are JSON. The client→server and server→client contracts are fully typed as discriminated unions in `src/types.ts`.
+All messages are Socket.IO events named after the message `type`; the payload is the JSON message. The client→server and server→client contracts are fully typed as discriminated unions in `src/types.ts`.
 
 **Client → Server**
 
@@ -192,5 +192,6 @@ All messages are JSON. The client→server and server→client contracts are ful
 | `new-producer` | Notifies peers of a new stream to consume |
 | `consumer-created` | RTP params for the new consumer |
 | `peer-left` | Notifies peers of a disconnection |
+| `join-error` | Room not found; the server then disconnects the socket |
 | `key-requested` | Relays a key request to existing peers |
 | `key-exchange-received` | Delivers an encrypted room key to the target peer |

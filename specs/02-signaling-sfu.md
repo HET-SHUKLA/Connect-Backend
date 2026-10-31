@@ -1,6 +1,6 @@
 # 04 — Signaling, Rooms and SFU (Connect-Backend)
 
-Repo: Connect-Backend · one Node.js process: Express (REST, `/api`) + `ws` WebSocket (`/ws`) + mediasoup workers. Port `WS_PORT` (default 8080). **This repo owns this contract**; Connect-Frontend mirrors it by hand (`src/types.ts`).
+Repo: Connect-Backend · one Node.js process: Express (REST, `/api`) + Socket.IO 4 (default path `/socket.io`) + mediasoup workers. Port `WS_PORT` (default 8080). **This repo owns this contract**; Connect-Frontend mirrors it by hand (`src/types.ts`).
 
 ## Room lifecycle (target, report §4.4)
 
@@ -26,9 +26,9 @@ Repo: Connect-Backend · one Node.js process: Express (REST, `/api`) + `ws` WebS
 
 Target: version prefix `/api/v1`, JWT middleware on room create/join, RFC 7807 errors.
 
-## WebSocket contract (as implemented, path `/ws`)
+## Signaling contract (as implemented: Socket.IO, [ADR-0003](./adr/0003-signaling-transport.md))
 
-All messages are JSON with a `type` discriminator. Source of truth: `src/types.ts` (**Connect-Frontend keeps a mirror in its `src/types.ts` — a breaking change here must be announced for the frontend**). The server router in `index.ts` uses an exhaustive `switch` with a `never` guard — adding a `ClientMessage` variant without a case is a compile error; keep it that way.
+Each message is emitted as a Socket.IO event **named after its `type`** (e.g. `emit("join-room", { type: "join-room", roomId })`). Only `join-room` is accepted before the peer has joined; every later message must carry the `roomId` the peer joined or it is ignored. A missing room yields `join-error { reason }` and the server disconnects the socket. Source of truth: `src/types.ts` (**Connect-Frontend keeps a mirror in its `src/types.ts` — a breaking change here must be announced for the frontend**). The server router in `index.ts` uses an exhaustive `switch` with a `never` guard — adding a `ClientMessage` variant without a case is a compile error; keep it that way, and add the type to `clientEvents`.
 
 | Dir | `type` | Payload | Behaviour |
 |---|---|---|---|

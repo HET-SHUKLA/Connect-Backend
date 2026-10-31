@@ -6,5 +6,5 @@ One file per significant decision: `NNNN-kebab-title.md`, from [`../templates/ad
 |---|---|---|
 | [0001](./0001-sfu-over-mesh.md) | Use an SFU (mediasoup) instead of full-mesh P2P | Accepted |
 | [0002](./0002-frame-level-e2ee.md) | Frame-level E2EE on top of DTLS-SRTP; server relays keys blindly | Accepted |
-| [0003](./0003-signaling-transport.md) | Raw `ws` vs Socket.IO for signaling | **Proposed — decision needed** |
+| [0003](./0003-signaling-transport.md) | Socket.IO vs raw `ws` for signaling | Accepted (Socket.IO) |
 | [0004](./0004-jwt-verification.md) | How the backend verifies Authentication-Service tokens | **Proposed — decision needed** |
